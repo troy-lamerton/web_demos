@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+    <title>FLV to MP4 remuxer</title>
+    <script src="bundle.js"></script>
+    <style>
+        code {
+            white-space: pre;
+            background-color: black;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>FLV to MP4 remuxer</h1>
+
+    <hr>
+    <div id="vid" style="width:100%;height:100%;"></div>
+    <hr>
+
+    <div id="logs">
+        <br>
+        <code id="stdout">...</code>
+        <br>
+        <code id="stderr"></code>
+    </div>
+
+    <br>
+    <div id="download" />
+
+    <script>
+        window.onload = () => {
+
+            document.body.style.background = 'gray'
+
+            // fetch('assets/sintel.flv').then(res => {
+            //     res.body.array
+            // })
+
+            var oReq = new XMLHttpRequest();
+            oReq.open("GET", "assets/iPhoneX.flv", true);
+            oReq.responseType = "arraybuffer";
+
+            oReq.onload = function (oEvent) {
+
+                var arrayBuffer = oReq.response; // Note: not oReq.responseText
+                // var byteArray = new Uint8Array(arrayBuffer);
+
+                let stdout = "";
+                let stderr = "";
+
+                const cmd = `-i input.flv -c copy -copyts out2.mp4`;
+                // const cmd = `-i input.flv -vcodec h264 -acodec aac out.flv`;
+                console.info('ffmpeg ' + cmd)
+
+                const arguments = ['-hide_banner', ...cmd.split(' ')];
+
+                const done = ffmpeg({
+                    MEMFS: [{name: 'input.flv', data: arrayBuffer}],
+                    arguments,
+                    print: function(data) { stdout += data + "\n"; },
+                    printErr: function(data) { stderr += data + "\n"; },
+                    onExit: function(code) {
+                        console.log("Process exited with code " + code);
+                        if (code != 0) {
+                            document.getElementById('logs').style.background = 'red';
+                        } else {
+                            document.getElementById('logs').style.background = 'green';
+                        }
+                        document.getElementById('stdout').textContent = stdout;
+                        document.getElementById('stderr').textContent = stderr;
+                    },
+                    // Ignore stdin read requests.
+                    stdin: function() {},
+                });
+
+                const outputFile = done.MEMFS[0];
+                console.info(outputFile);
+                const linkElement = getDownloadLink(outputFile.data, outputFile.name);
+                document.getElementById('download').appendChild(linkElement);
+            };
+
+            // source: https://github.com/bgrins/videoconverter.js/blob/master/demo/terminal.js
+            function getDownloadLink(fileData, fileName) {
+                var a = document.createElement('a');
+                a.download = fileName;
+                var blob = new Blob([fileData]);
+                var src = window.URL.createObjectURL(blob);
+                a.href = src;
+                a.style = 'font-size: 2em;'
+                a.textContent = 'Download ' + fileName;
+                return a;
+            }
+
+            oReq.send(null);
+        }
+    </script>
+</body>
+
+</html>
