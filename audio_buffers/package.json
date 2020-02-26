@@ -1,0 +1,16 @@
+{
+  "name": "web_ffmpeg",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "make": "browserify main.js -o bundle.js",
+    "start": "budo",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "budo": "^11.6.3"
+  }
+}
