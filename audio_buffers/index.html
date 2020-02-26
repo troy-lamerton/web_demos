@@ -3,6 +3,7 @@
 
 <head>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
     <title>Capture Audio buffers</title>
     <style>
         code {
@@ -10,20 +11,17 @@
             background-color: black;
             color: white;
         }
-
         html,
         body {
             width: 100%;
             height: 100%;
             margin: 0;
         }
-
         video {
             width: 100%;
-            height: 100%;
+            height: calc(100% - 2em);
             background: #000;
         }
-
         .button-bar {
             position: fixed;
             bottom: 0;
@@ -46,11 +44,8 @@
 </head>
 
 <body>
-    <h1>Capture Audio buffers</h1>
-
-    <video id="vid" playsinline webkit-playsinline loop crossorigin="anonymous" autoplay controls>
-        <source src="assets/talking_ellen.mp4"
-            type="video/mp4">
+    <video id="vid" playsinline webkit-playsinline crossorigin="anonymous" autoplay muted controls>
+        <source src="assets/talking_ellen.mp4" type="video/mp4">
     </video>
 
     <div class="button-bar">
@@ -58,14 +53,47 @@
         <button onclick="panToRight();">Right</button>
     </div>
 
-    <script src="main.js"></script>
     <script>
-        window.onload = () => {
-
-            document.body.style.background = 'gray'
-
-        }
+        // Fix iOS Audio Context by Blake Kus https://gist.github.com/kus/3f01d60569eeadefe3a1
+        // MIT license
+        (function () {
+            window.AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (window.AudioContext) {
+                window.audioContext = new window.AudioContext();
+            }
+            var fixAudioContext = function (e) {
+                e.preventDefault();
+                console.info('fixAudioContext ...')
+                if (window.audioContext) {
+                    // Create empty buffer
+                    var buffer = window.audioContext.createBuffer(1, 1, 22050);
+                    var source = window.audioContext.createBufferSource();
+                    source.buffer = buffer;
+                    // Connect to output (speakers)
+                    source.connect(window.audioContext.destination);
+                    // Play sound
+                    if (source.start) {
+                        source.start(0);
+                    } else if (source.play) {
+                        source.play(0);
+                    } else if (source.noteOn) {
+                        source.noteOn(0);
+                    }
+                }
+                console.info('did fix ios bullshit!')
+                // Remove events
+                //document.removeEventListener('touchstart', fixAudioContext);
+                document.removeEventListener('touchend', fixAudioContext);
+                window.withAudioContext(audioContext);
+            };
+            // // iOS 6-8
+            // document.addEventListener('touchstart', fixAudioContext);
+            // iOS 9
+            document.addEventListener('touchend', fixAudioContext);
+        }) // DISABLED
+        // })(); // ENABLED
     </script>
+    <script src="main.js"></script>
 </body>
 
 </html>
