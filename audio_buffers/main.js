@@ -11,7 +11,7 @@ let selectedChannel = 0;
 let logi = 0;
 
 const effect = (function () {
-    var node = audioContext.createScriptProcessor(undefined, 2, 2);
+    var node = audioContext.createScriptProcessor(1024, 2, 2);
     console.log('audio node processor', node);
 
     node.addEventListener('audioprocess', function (e) {
@@ -23,7 +23,16 @@ const effect = (function () {
 
         if (logi++ % 80 == 0) {
             if (window.cosAudio) {
+                // does this give a nice [Float32] array in swift side?
+                // window.cosAudio(Array.from(input));
                 window.cosAudio(input);
+            } else if (cosAudioAndroid) {
+                // const data = [1.123, 1.2222, 3.34324, 23432, 23, 1.00, 0.23, -2.0234234];
+                // input is a TypedArray (Float32Array), so we must make it normal array
+                // so that json excludes keys "0": "0.1234".
+                const valuesArray = Array.from(input);
+                const json = JSON.stringify(valuesArray);
+                cosAudioAndroid.giveAudio(json);
             }
         }
 
@@ -60,8 +69,8 @@ vid.addEventListener('loadedmetadata', function () {
 vid.addEventListener('play', function (e) {
     console.log('onplay lets attach', !e.currentTarget.paused);
     if (streamAttached) {
-        // console.log('resuming audioContext..')
-        // audioContext.resume()
+        console.log('resuming audioContext..')
+        audioContext.resume()
     }
 });
 vid.addEventListener('pause', function (e) {

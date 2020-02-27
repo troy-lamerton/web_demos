@@ -2,10 +2,10 @@
   "name": "web_ffmpeg",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
     "make": "browserify main.js -o bundle.js",
-    "start": "budo",
+    "start": "budo --live",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
